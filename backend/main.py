@@ -37,8 +37,11 @@ pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 def hash_password(password: str):
     return pwd_context.hash(password)
 
+
 def verify_password(plain, hashed):
     return pwd_context.verify(plain, hashed)
+
+
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
@@ -62,7 +65,7 @@ def get_current_user(token: str = Header(...), db: Session = Depends(get_db)):
 
     return user
 
-# ---------- AUTH ROUTES ----------
+# ---------- ROUTES ----------
 
 @app.post("/signup")
 def signup(user: UserCreate, db: Session = Depends(get_db)):
@@ -112,7 +115,7 @@ def create_chat(
     user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    chat = Chat(title="New Chat", user_id=user.id)
+    chat = Chat(title=data.title or "New Chat", user_id=user.id)
     db.add(chat)
     db.commit()
     db.refresh(chat)
@@ -120,13 +123,12 @@ def create_chat(
 
 @app.get("/chats", response_model=list[ChatResponse])
 def get_chats(
-    user_id: str,
     user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     chats = (
         db.query(Chat)
-        .filter(Chat.user_id == user_id)
+        .filter(Chat.user_id == user.id)
         .order_by(Chat.created_at.desc())
         .all()
     )
@@ -138,6 +140,10 @@ def get_messages(
     user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    chat = db.query(Chat).filter(Chat.id == chat_id).first()
+    if chat.user_id != user.id:
+        raise HTTPException(status_code=403, detail="Not your chat")
+    
     return db.query(Message).filter(Message.chat_id == chat_id).all()
 
 @app.post("/chats/{chat_id}")
@@ -147,6 +153,14 @@ def send_message(
     user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    chat = db.query(Chat).filter(Chat.id == chat_id).first()
+
+    if not chat:
+        raise HTTPException(status_code=404, detail="Chat not found")
+
+    if chat.user_id != user.id:
+        raise HTTPException(status_code=403, detail="Not your chat")
+
 
     db.add(Message(chat_id=chat_id, role="user", content=msg.content))
     db.commit()
@@ -159,8 +173,7 @@ def send_message(
     )
 
     if len(history) == 1:
-        chat_obj = db.query(Chat).filter(Chat.id == chat_id).first()
-        chat_obj.title = msg.content[:30]
+        chat.title = msg.content[:30]
         db.commit()
 
     chat_history = []

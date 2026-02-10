@@ -70,7 +70,7 @@ with st.sidebar:
     if st.button("🚀 New Chat"):
         res = requests.post(
             f"{BACKEND}/chats",
-            json={"user_id": st.session_state.user_id},
+            json={},
             headers=headers
         )
 
@@ -79,7 +79,6 @@ with st.sidebar:
 
     res = requests.get(
         f"{BACKEND}/chats",
-        params={"user_id": st.session_state.user_id},
         headers=headers
     )
 
