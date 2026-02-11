@@ -1,7 +1,8 @@
 import streamlit as st
 import requests
 
-BACKEND = "http://localhost:8000"
+BACKEND = "http://backend:8000"
+
 
 st.set_page_config(layout="wide")
 st.title("🤖 Stark AI")
