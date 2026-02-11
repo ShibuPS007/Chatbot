@@ -1,11 +1,11 @@
 import os
 from fastapi import FastAPI, Depends, Header, HTTPException
 from sqlalchemy.orm import Session
-from database import Base, engine, SessionLocal
-from models import Chat, Message, User
+from backend.database import Base, engine, SessionLocal
+from backend.models import Chat, Message, User
 import google.generativeai as genai
 from dotenv import load_dotenv
-from pydantic_schemas import ChatResponse, MessageResponse, MessageCreate, UserCreate, LoginRequest, ChatCreate
+from backend.pydantic_schemas import ChatResponse, MessageResponse, MessageCreate, UserCreate, LoginRequest, ChatCreate
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
@@ -140,11 +140,26 @@ def get_messages(
     user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    chat = db.query(Chat).filter(Chat.id == chat_id).first()
-    if chat.user_id != user.id:
+
+    # 🔐 ONE query that proves ownership in one shot
+    chat = (
+        db.query(Chat)
+        .filter(Chat.id == chat_id, Chat.user_id == user.id)
+        .first()
+    )
+
+    # If nothing is returned → either chat doesn't exist
+    # OR it doesn't belong to this user → treat as forbidden
+    if not chat:
         raise HTTPException(status_code=403, detail="Not your chat")
-    
-    return db.query(Message).filter(Message.chat_id == chat_id).all()
+
+    return (
+        db.query(Message)
+        .filter(Message.chat_id == chat_id)
+        .order_by(Message.timestamp)
+        .all()
+    )
+
 
 @app.post("/chats/{chat_id}")
 def send_message(

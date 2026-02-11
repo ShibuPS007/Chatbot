@@ -1,7 +1,7 @@
 from sqlalchemy import Column, String, DateTime, ForeignKey, Text
 from datetime import datetime, timezone
 import uuid
-from database import Base
+from backend.database import Base
 
 class Chat(Base):
     __tablename__ = "chats"
