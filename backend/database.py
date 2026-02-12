@@ -1,7 +1,14 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
+import  os
 
-DATABASE_URL = "sqlite:///./chat.db"
+
+IN_DOCKER = os.path.exists("/.dockerenv")
+
+if IN_DOCKER:
+    DATABASE_URL = "sqlite:////app/backend/chat.db"
+else:
+    DATABASE_URL = "sqlite:///backend/chat.db" 
 
 engine = create_engine(
     DATABASE_URL, connect_args={"check_same_thread": False}

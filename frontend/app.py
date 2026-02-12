@@ -70,12 +70,19 @@ with st.sidebar:
 
     if st.button("🚀 New Chat"):
         res = requests.post(
-            f"{BACKEND}/chats",
-            json={},
-            headers=headers
+        f"{BACKEND}/chats",
+        json={"title": "New Chat"},   # ✅ important change
+        headers=headers
         )
 
-        st.session_state.chat_id = res.json()["id"]
+        data = res.json()
+
+    # Safety guard (prevents KeyError forever)
+        if "id" not in data:
+            st.error(f"Backend error: {data}")
+            st.stop()
+
+        st.session_state.chat_id = data["id"]
         st.rerun()
 
     res = requests.get(
