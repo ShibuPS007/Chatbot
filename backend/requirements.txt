@@ -3,7 +3,9 @@ uvicorn
 sqlalchemy
 python-dotenv
 google-generativeai
-passlib
+passlib[argon2]
 python-jose
 argon2-cffi
 requests
+httpx
+pytest
