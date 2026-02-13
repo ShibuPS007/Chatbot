@@ -1,7 +1,8 @@
 import streamlit as st
 import requests
 
-BACKEND = "http://backend:8000"
+BACKEND = "https://chatbot-backend-latest-7ncz.onrender.com"
+
 
 
 st.set_page_config(layout="wide")
