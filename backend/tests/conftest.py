@@ -4,6 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 from backend.main import app
 from backend.database import Base, engine
+import backend.main as main
 
 
 client = TestClient(app)
@@ -17,8 +18,8 @@ def setup_db():
     yield
     Base.metadata.drop_all(bind=engine)
 
-# ---------- Shared helper for ALL tests ----------
 
+# ---------- Shared helper for ALL tests ----------
 def get_test_token(email):
     client.post(
         "/signup",
@@ -32,3 +33,18 @@ def get_test_token(email):
 
     return res.json()["access_token"]
 
+
+# ---------- Mock Gemini (VERY IMPORTANT) ----------
+
+class MockGeminiResponse:
+    text = "Mock reply from Gemini"
+
+class MockGeminiChat:
+    def send_message(self, msg):
+        return MockGeminiResponse()
+
+def mock_start_chat(history=None):
+    return MockGeminiChat()
+
+# Replace real Gemini with mock
+main.model.start_chat = mock_start_chat
