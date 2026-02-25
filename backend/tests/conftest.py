@@ -39,12 +39,15 @@ def get_test_token(email):
 class MockGeminiResponse:
     text = "Mock reply from Gemini"
 
-class MockGeminiChat:
+class MockGeminiChatSession:
     def send_message(self, msg):
         return MockGeminiResponse()
 
-def mock_start_chat(history=None):
-    return MockGeminiChat()
+class MockGeminiModel:
+    def start_chat(self, history=None):
+        return MockGeminiChatSession()
 
-# Replace real Gemini with mock
-main.model.start_chat = mock_start_chat
+def mock_get_gemini_model():
+    return MockGeminiModel()
+
+main.get_gemini_model = mock_get_gemini_model
