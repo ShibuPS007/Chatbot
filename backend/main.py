@@ -16,12 +16,18 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+if not GEMINI_API_KEY:
+    raise RuntimeError("GEMINI_API_KEY not set")
+
+genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel("models/gemini-flash-latest")
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+print("🚀 BACKEND VERSION 3 LOADED")
 
 # ---------- DB DEPENDENCY ----------
 def get_db():
@@ -30,6 +36,11 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY not set")
+
 
 # ---------- PASSWORD HASHING ----------
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")

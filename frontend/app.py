@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 
-BACKEND = "https://chatbot-backend-latest-7ncz.onrender.com"
+BACKEND = "https://stark-backend.bravedesert-122abdcf.centralindia.azurecontainerapps.io"
 
 
 

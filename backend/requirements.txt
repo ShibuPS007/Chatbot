@@ -9,3 +9,4 @@ argon2-cffi
 requests
 httpx
 pytest
+psycopg2-binary
