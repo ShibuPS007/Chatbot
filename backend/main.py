@@ -16,13 +16,13 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+def get_gemini_model():
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="Gemini API key not configured")
 
-if not GEMINI_API_KEY:
-    raise RuntimeError("GEMINI_API_KEY not set")
-
-genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel("models/gemini-flash-latest")
+    genai.configure(api_key=api_key)
+    return genai.GenerativeModel("models/gemini-flash-latest")
 
 Base.metadata.create_all(bind=engine)
 
@@ -207,8 +207,9 @@ def send_message(
         role = "user" if m.role == "user" else "model"
         chat_history.append({"role": role, "parts": [m.content]})
 
-    chat = model.start_chat(history=chat_history)
-    response = chat.send_message(msg.content)
+    model = get_gemini_model()
+    chat_session = model.start_chat(history=chat_history)
+    response = chat_session.send_message(msg.content)
 
     db.add(Message(chat_id=chat_id, role="assistant", content=response.text))
     db.commit()
