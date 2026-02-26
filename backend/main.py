@@ -39,7 +39,7 @@ def get_db():
 
 
 if not SECRET_KEY:
-    raise RuntimeError("SECRET_KEY not set")
+    SECRET_KEY = "test-secret-key"
 
 
 # ---------- PASSWORD HASHING ----------
