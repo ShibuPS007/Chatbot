@@ -11,7 +11,7 @@ pool:
 
 variables:
   acrName: starkregistry123
-  resourceGroup: stark-ai-rg
+  resourceGroup: chatbot
   backendApp: stark-backend
   frontendApp: stark-frontend
   azureServiceConnection: azure-connection
