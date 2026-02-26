@@ -1,0 +1,109 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  acrName: starkregistry123
+  resourceGroup: stark-ai-rg
+  backendApp: stark-backend
+  frontendApp: stark-frontend
+  azureServiceConnection: azure-connection
+
+steps:
+
+
+# Install Python & Run Tests
+
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.12'
+
+- script: |
+    python -m pip install --upgrade pip
+    pip install -r backend/requirements.txt
+    pip install pytest
+    pytest backend/tests
+  displayName: "Run Backend Tests"
+
+
+# Generate Short Git SHA
+
+- script: |
+    SHORT_SHA=$(echo $(Build.SourceVersion) | cut -c1-7)
+    echo "##vso[task.setvariable variable=shortSha]$SHORT_SHA"
+  displayName: "Generate Short SHA"
+
+
+# Build & Push Backend Image
+
+- script: |
+    IMAGE_TAG="$(Build.SourceBranchName)-$(Build.BuildId)-$(shortSha)"
+
+    echo "Building backend image with tag: $IMAGE_TAG"
+
+    docker build \
+      -t $(acrName).azurecr.io/backend:$IMAGE_TAG \
+      -f backend/Dockerfile.backend .
+
+    docker push $(acrName).azurecr.io/backend:$IMAGE_TAG
+
+    echo "##vso[task.setvariable variable=backendImageTag]$IMAGE_TAG"
+  displayName: "Build & Push Backend Image"
+
+
+# Deploy Backend Container App
+
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: $(azureServiceConnection)
+    scriptType: bash
+    scriptLocation: inlineScript
+    inlineScript: |
+      az acr login --name $(acrName)
+
+      az containerapp update \
+        --name $(backendApp) \
+        --resource-group $(resourceGroup) \
+        --image $(acrName).azurecr.io/backend:$(backendImageTag)
+  displayName: "Deploy Backend"
+
+
+# Build & Push Frontend Image
+
+- script: |
+    IMAGE_TAG="$(Build.SourceBranchName)-$(Build.BuildId)-$(shortSha)"
+
+    echo "Building frontend image with tag: $IMAGE_TAG"
+
+    docker build \
+      -t $(acrName).azurecr.io/frontend:$IMAGE_TAG \
+      -f frontend/Dockerfile.frontend frontend
+
+    docker push $(acrName).azurecr.io/frontend:$IMAGE_TAG
+
+    echo "##vso[task.setvariable variable=frontendImageTag]$IMAGE_TAG"
+  displayName: "Build & Push Frontend Image"
+
+
+# Deploy Frontend Container App
+
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: $(azureServiceConnection)
+    scriptType: bash
+    scriptLocation: inlineScript
+    inlineScript: |
+      az acr login --name $(acrName)
+
+      az containerapp update \
+        --name $(frontendApp) \
+        --resource-group $(resourceGroup) \
+        --image $(acrName).azurecr.io/frontend:$(frontendImageTag)
+  displayName: "Deploy Frontend"
