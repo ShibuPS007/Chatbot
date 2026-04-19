@@ -1,5 +1,5 @@
 import os
-from fastapi import FastAPI, Depends, Header, HTTPException
+from fastapi import FastAPI, Depends, Header, HTTPException,status
 from sqlalchemy.orm import Session
 from backend.database import Base, engine, SessionLocal
 from backend.models import Chat, Message, User
@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from backend.pydantic_schemas import ChatResponse, MessageResponse, MessageCreate, UserCreate, LoginRequest, ChatCreate
 from passlib.context import CryptContext
 from jose import JWTError, jwt
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials 
 from datetime import datetime, timedelta
 
 load_dotenv()
@@ -53,7 +54,7 @@ def verify_password(plain, hashed):
     return pwd_context.verify(plain, hashed)
 
 
-
+security = HTTPBearer()
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
     expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
@@ -61,7 +62,9 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-def get_current_user(token: str = Header(...), db: Session = Depends(get_db)):
+def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)):
+
+    token=credentials.credentials
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("sub")
@@ -83,7 +86,10 @@ def signup(user: UserCreate, db: Session = Depends(get_db)):
 
     existing = db.query(User).filter(User.email == user.email).first()
     if existing:
-        return {"error": "Email already exists"}
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already exists"
+        )
 
     new_user = User(
         email=user.email,
@@ -108,7 +114,10 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == data.email).first()
 
     if not user or not verify_password(data.password, user.hashed_password):
-        return {"error": "Invalid credentials"}
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid credentials"
+        )
 
     token = create_access_token({"sub": str(user.id)})
 

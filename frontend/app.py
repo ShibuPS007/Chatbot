@@ -64,7 +64,9 @@ if "user_id" not in st.session_state:
 
 # -------- SIDEBAR --------
 
-headers = {"token": st.session_state.token}
+headers = {
+    "Authorization": f"Bearer {st.session_state.token}"
+}
 
 with st.sidebar:
     st.write(f"User: {st.session_state.user_id}")
