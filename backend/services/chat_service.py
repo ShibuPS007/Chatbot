@@ -50,7 +50,7 @@ def send_message(db: Session, user_id: str, chat_id: str, content: str):
     # Save user message
     db.add(Message(chat_id=chat_id, role="user", content=content))
     db.commit()
-
+    
     # Load full history
     history = (
         db.query(Message)
@@ -63,11 +63,11 @@ def send_message(db: Session, user_id: str, chat_id: str, content: str):
     if len(history) == 1:
         chat.title = content[:30]
         db.commit()
-
+    previous_messages=history[:-1]
     # Convert history to Gemini format
     chat_history = []
 
-    for message in history:
+    for message in previous_messages:
         role = "user" if message.role == "user" else "model"
 
         chat_history.append({"role": role, "parts": [message.content]})

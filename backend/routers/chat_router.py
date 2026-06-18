@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from backend.database import get_db
 from backend.auth import get_current_user
-from backend.schemas import ChatResponse, MessageResponse, MessageCreate, ChatCreate
+from backend.schemas import ChatResponse, MessageResponse, MessageCreate, ChatCreate,ReplyResponse
 
 from backend.services import chat_service
 
@@ -29,7 +29,7 @@ def get_messages_route(
     return chat_service.get_chat_messages(db=db, user_id=user.id, chat_id=chat_id)
 
 
-@router.post("/chats/{chat_id}")
+@router.post("/chats/{chat_id}",response_model=ReplyResponse)
 def send_message_route(
     chat_id: str,
     msg: MessageCreate,
