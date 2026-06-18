@@ -43,6 +43,8 @@ jobs:
         continue-on-error: true
 
       - name: Run Tests (excluding integration tests)
+        env:
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
         run: |
           pytest backend/tests \
           --ignore=backend/tests/test_integration.py
