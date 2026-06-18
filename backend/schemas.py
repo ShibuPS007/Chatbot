@@ -1,9 +1,10 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import List
+
 
 class ChatCreate(BaseModel):
     title: str | None = "New Chat"
+
 
 class ChatResponse(BaseModel):
     id: str
@@ -13,8 +14,10 @@ class ChatResponse(BaseModel):
     class Config:
         orm_mode = True
 
+
 class MessageCreate(BaseModel):
     content: str
+
 
 class MessageResponse(BaseModel):
     id: str
@@ -26,12 +29,15 @@ class MessageResponse(BaseModel):
     class Config:
         orm_mode = True
 
+
 class ReplyResponse(BaseModel):
     reply: str
+
 
 class UserCreate(BaseModel):
     email: str
     password: str
+
 
 class LoginRequest(BaseModel):
     email: str

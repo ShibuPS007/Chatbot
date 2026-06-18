@@ -1,8 +1,9 @@
 import streamlit as st
 import requests
 
-BACKEND = "https://stark-backend.bravedesert-122abdcf.centralindia.azurecontainerapps.io"
-
+BACKEND = (
+    "https://stark-backend.bravedesert-122abdcf.centralindia.azurecontainerapps.io"
+)
 
 
 st.set_page_config(layout="wide")
@@ -22,8 +23,7 @@ if "user_id" not in st.session_state:
         if st.button("Login"):
 
             res = requests.post(
-                f"{BACKEND}/login",
-                json={"email": email, "password": password}
+                f"{BACKEND}/login", json={"email": email, "password": password}
             )
 
             data = res.json()
@@ -45,8 +45,7 @@ if "user_id" not in st.session_state:
         if st.button("Signup"):
 
             res = requests.post(
-                f"{BACKEND}/signup",
-                json={"email": email, "password": password}
+                f"{BACKEND}/signup", json={"email": email, "password": password}
             )
 
             data = res.json()
@@ -64,23 +63,21 @@ if "user_id" not in st.session_state:
 
 # -------- SIDEBAR --------
 
-headers = {
-    "Authorization": f"Bearer {st.session_state.token}"
-}
+headers = {"Authorization": f"Bearer {st.session_state.token}"}
 
 with st.sidebar:
     st.write(f"User: {st.session_state.user_id}")
 
     if st.button("🚀 New Chat"):
         res = requests.post(
-        f"{BACKEND}/chats",
-        json={"title": "New Chat"},   # ✅ important change
-        headers=headers
+            f"{BACKEND}/chats",
+            json={"title": "New Chat"},  # ✅ important change
+            headers=headers,
         )
 
         data = res.json()
 
-    # Safety guard (prevents KeyError forever)
+        # Safety guard (prevents KeyError forever)
         if "id" not in data:
             st.error(f"Backend error: {data}")
             st.stop()
@@ -88,10 +85,7 @@ with st.sidebar:
         st.session_state.chat_id = data["id"]
         st.rerun()
 
-    res = requests.get(
-        f"{BACKEND}/chats",
-        headers=headers
-    )
+    res = requests.get(f"{BACKEND}/chats", headers=headers)
 
     chats = res.json()
 
@@ -106,10 +100,7 @@ if "chat_id" not in st.session_state:
     st.info("Select or create a chat from the sidebar")
     st.stop()
 
-res = requests.get(
-    f"{BACKEND}/chats/{st.session_state.chat_id}",
-    headers=headers
-)
+res = requests.get(f"{BACKEND}/chats/{st.session_state.chat_id}", headers=headers)
 
 messages = res.json()
 
@@ -126,7 +117,7 @@ if user_input:
     res = requests.post(
         f"{BACKEND}/chats/{st.session_state.chat_id}",
         json={"content": user_input},
-        headers=headers
+        headers=headers,
     )
 
     reply = res.json()["reply"]

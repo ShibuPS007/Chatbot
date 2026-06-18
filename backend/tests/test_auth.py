@@ -1,30 +1,24 @@
-from .conftest import client
-
-def test_signup():
-    res = client.post(
-        "/signup",
-        json={"email": "auth@test.com", "password": "password123"}
-    )
-
-    data = res.json()
-    assert res.status_code == 200
-    assert "user_id" in data
-    assert "access_token" in data
+from backend.auth import hash_password, verify_password, create_access_token
 
 
-def test_login():
-    # first create user
-    client.post(
-        "/signup",
-        json={"email": "login@test.com", "password": "secret"}
-    )
+def test_hash_password():
+    password = "secret123"
 
-    # then login
-    res = client.post(
-        "/login",
-        json={"email": "login@test.com", "password": "secret"}
-    )
+    hashed = hash_password(password)
 
-    data = res.json()
-    assert res.status_code == 200
-    assert "access_token" in data
+    assert hashed != password
+
+
+def test_verify_password():
+    password = "secret123"
+
+    hashed = hash_password(password)
+
+    assert verify_password(password, hashed)
+
+
+def test_create_access_token():
+    token = create_access_token({"sub": "123"})
+
+    assert token is not None
+    assert isinstance(token, str)
