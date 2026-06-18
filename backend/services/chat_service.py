@@ -77,7 +77,13 @@ def send_message(db: Session, user_id: str, chat_id: str, content: str):
 
     chat_session = model.start_chat(history=chat_history)
 
-    response = chat_session.send_message(content)
+    try:
+     response = chat_session.send_message(content)
+    except Exception:
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to generate response"
+        )
 
     # Save assistant reply
     db.add(Message(chat_id=chat_id, role="assistant", content=response.text))
