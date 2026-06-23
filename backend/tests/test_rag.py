@@ -11,12 +11,9 @@ def test_retrieve_relevant_chunk():
             "Paris is the capital of France",
             "Python is a programming language",
         ],
-        "user1"
+        "user1",
     )
 
-    results = retrieve(
-        "What is the capital of France?",
-        "user1"
-    )
+    results = retrieve("What is the capital of France?", "user1")
 
     assert "Paris" in results[0]

@@ -4,6 +4,8 @@ from sqlalchemy.orm import Session
 from backend.models import Chat, Message
 from backend.services.gemini_service import get_gemini_model
 from backend.services.embedding_service import retrieve, collection
+
+
 def create_chat(db: Session, user_id: str, title: str):
     chat = Chat(title=title or "New Chat", user_id=user_id)
 
@@ -49,7 +51,7 @@ def send_message(db: Session, user_id: str, chat_id: str, content: str):
     # Save user message
     db.add(Message(chat_id=chat_id, role="user", content=content))
     db.commit()
-    
+
     # Load full history
     history = (
         db.query(Message)
@@ -62,7 +64,7 @@ def send_message(db: Session, user_id: str, chat_id: str, content: str):
     if len(history) == 1:
         chat.title = content[:30]
         db.commit()
-    previous_messages=history[:-1]
+    previous_messages = history[:-1]
     # Convert history to Gemini format
     chat_history = []
 
@@ -71,7 +73,6 @@ def send_message(db: Session, user_id: str, chat_id: str, content: str):
 
         chat_history.append({"role": role, "parts": [message.content]})
 
-
     model = get_gemini_model()
     chat_session = model.start_chat(history=chat_history)
 
@@ -79,7 +80,7 @@ def send_message(db: Session, user_id: str, chat_id: str, content: str):
         context = ""
 
         if collection.count() > 0:
-            chunks = retrieve(content,user_id)
+            chunks = retrieve(content, user_id)
 
             if chunks:
                 context = "\n\n".join(chunks)
@@ -99,10 +100,7 @@ def send_message(db: Session, user_id: str, chat_id: str, content: str):
         response = chat_session.send_message(prompt)
 
     except Exception:
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to generate response"
-        )
+        raise HTTPException(status_code=500, detail="Failed to generate response")
 
     # Save assistant reply
     db.add(Message(chat_id=chat_id, role="assistant", content=response.text))

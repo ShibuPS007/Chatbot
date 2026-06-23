@@ -23,6 +23,7 @@ def test_create_access_token():
     assert token is not None
     assert isinstance(token, str)
 
+
 def test_duplicate_signup(client):
 
     client.post(
@@ -37,6 +38,7 @@ def test_duplicate_signup(client):
 
     assert response.status_code == 400
     assert response.json()["detail"] == "Email already exists"
+
 
 def test_invalid_login(client):
 
@@ -53,6 +55,7 @@ def test_invalid_login(client):
     assert response.status_code == 401
     assert response.json()["detail"] == "Invalid credentials"
 
+
 def test_invalid_token(client):
 
     response = client.get(
@@ -61,5 +64,3 @@ def test_invalid_token(client):
     )
 
     assert response.status_code == 401
-
-

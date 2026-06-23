@@ -69,9 +69,7 @@ def test_user_cannot_access_other_chat(client):
 
     token1 = response1.json()["access_token"]
 
-    headers1 = {
-        "Authorization": f"Bearer {token1}"
-    }
+    headers1 = {"Authorization": f"Bearer {token1}"}
 
     chat_response = client.post(
         "/chats",
@@ -89,9 +87,7 @@ def test_user_cannot_access_other_chat(client):
 
     token2 = response2.json()["access_token"]
 
-    headers2 = {
-        "Authorization": f"Bearer {token2}"
-    }
+    headers2 = {"Authorization": f"Bearer {token2}"}
 
     response = client.get(
         f"/chats/{chat_id}",

@@ -1,5 +1,6 @@
 from pypdf import PdfReader
 
+
 def extract_text(path: str):
     reader = PdfReader(path)
 
