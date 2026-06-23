@@ -1,0 +1,17 @@
+{
+  "servers": {
+    "sonarqube": {
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "-e",
+        "SONARQUBE_URL=http://40.81.232.167:9000",
+        "-e",
+        "SONARQUBE_TOKEN=squ_55abeb95d4cd41d796edda91f876440632410c3a",
+        "mcp/sonarqube"
+      ]
+    }
+  }
+}

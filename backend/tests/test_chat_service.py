@@ -57,3 +57,45 @@ def test_send_message(db, mocker):
     result = send_message(db=db, user_id=user.id, chat_id=chat.id, content="Hi")
 
     assert result["reply"] == "Hello from Gemini"
+
+
+def test_user_cannot_access_other_chat(client):
+
+    # User 1
+    response1 = client.post(
+        "/signup",
+        json={"email": "user1@test.com", "password": "123456"},
+    )
+
+    token1 = response1.json()["access_token"]
+
+    headers1 = {
+        "Authorization": f"Bearer {token1}"
+    }
+
+    chat_response = client.post(
+        "/chats",
+        json={"title": "Secret Chat"},
+        headers=headers1,
+    )
+
+    chat_id = chat_response.json()["id"]
+
+    # User 2
+    response2 = client.post(
+        "/signup",
+        json={"email": "user2@test.com", "password": "123456"},
+    )
+
+    token2 = response2.json()["access_token"]
+
+    headers2 = {
+        "Authorization": f"Bearer {token2}"
+    }
+
+    response = client.get(
+        f"/chats/{chat_id}",
+        headers=headers2,
+    )
+
+    assert response.status_code == 403

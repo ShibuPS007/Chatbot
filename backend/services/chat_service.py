@@ -3,8 +3,7 @@ from sqlalchemy.orm import Session
 
 from backend.models import Chat, Message
 from backend.services.gemini_service import get_gemini_model
-
-
+from backend.services.embedding_service import retrieve, collection
 def create_chat(db: Session, user_id: str, title: str):
     chat = Chat(title=title or "New Chat", user_id=user_id)
 
@@ -72,13 +71,33 @@ def send_message(db: Session, user_id: str, chat_id: str, content: str):
 
         chat_history.append({"role": role, "parts": [message.content]})
 
-    # Call Gemini
-    model = get_gemini_model()
 
+    model = get_gemini_model()
     chat_session = model.start_chat(history=chat_history)
 
     try:
-     response = chat_session.send_message(content)
+        context = ""
+
+        if collection.count() > 0:
+            chunks = retrieve(content,user_id)
+
+            if chunks:
+                context = "\n\n".join(chunks)
+
+        prompt = f"""
+    Relevant context:
+    {context}
+
+    User question:
+    {content}
+
+    Instructions:
+    - Use the context if it is useful.
+    - Ignore it if it is irrelevant.
+    """
+
+        response = chat_session.send_message(prompt)
+
     except Exception:
         raise HTTPException(
             status_code=500,

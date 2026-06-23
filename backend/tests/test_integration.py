@@ -116,3 +116,5 @@ def test_protected_route_without_token(client):
     response = client.get("/chats")
 
     assert response.status_code == 401
+
+
