@@ -1,53 +1,47 @@
-# backend/tests/conftest.py
-
 import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 from fastapi.testclient import TestClient
+
+from backend.database import Base, get_db
 from backend.main import app
-from backend.database import Base, engine
-import backend.main as main
+
+# IMPORTANT
+from backend.models import User, Chat, Message
+
+SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
+
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+)
+
+TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+Base.metadata.create_all(bind=engine)
 
 
-client = TestClient(app)
+@pytest.fixture
+def db():
 
-# ---------- Shared DB setup for ALL tests ----------
-@pytest.fixture(scope="function", autouse=True)
-def setup_db():
-    # Fresh database before tests
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
-    yield
-    Base.metadata.drop_all(bind=engine)
+
+    session = TestingSessionLocal()
+
+    yield session
+
+    session.close()
 
 
-# ---------- Shared helper for ALL tests ----------
-def get_test_token(email):
-    client.post(
-        "/signup",
-        json={"email": email, "password": "pass123"}
-    )
+@pytest.fixture
+def client(db):
 
-    res = client.post(
-        "/login",
-        json={"email": email, "password": "pass123"}
-    )
+    def override_get_db():
+        yield db
 
-    return res.json()["access_token"]
+    app.dependency_overrides[get_db] = override_get_db
 
+    with TestClient(app) as client:
+        yield client
 
-# ---------- Mock Gemini (VERY IMPORTANT) ----------
-
-class MockGeminiResponse:
-    text = "Mock reply from Gemini"
-
-class MockGeminiChatSession:
-    def send_message(self, msg):
-        return MockGeminiResponse()
-
-class MockGeminiModel:
-    def start_chat(self, history=None):
-        return MockGeminiChatSession()
-
-def mock_get_gemini_model():
-    return MockGeminiModel()
-
-main.get_gemini_model = mock_get_gemini_model
+    app.dependency_overrides.clear()

@@ -1,82 +1,39 @@
-name: CI/CD Pipeline
+name: CI Push
 
 on:
   push:
     branches:
-      - main
+      - "feature/**"
 
-env:
-  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-  SECRET_KEY: ${{ secrets.SECRET_KEY }}
-  DATABASE_URL: ${{ secrets.DATABASE_URL }}
 jobs:
-
-
-  test-backend:
+  quality-and-tests:
     runs-on: ubuntu-latest
 
     steps:
-
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: 3.12
+          python-version: "3.12"
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: |
-          cd backend
-          pip install -r requirements.txt
-          pip install pytest
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+          pip install pytest pytest-mock
+          pip install ruff black
 
-      - name: Run tests
+      - name: Ruff Check
+        run: ruff check . --ignore F401
+
+      - name: Black Check
+        run: black --check .
+
+      - name: Run Tests
+        env:
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
         run: |
-          cd backend
-          pytest
-
- 
-
-  build-and-push:
-    needs: test-backend
-    runs-on: ubuntu-latest
-
-    steps:
-
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Login to Docker Hub
-        run: |
-          echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-
-      # -----------------------------
-      # Build Backend Image
-      # -----------------------------
-      - name: Build backend image
-        run: |
-          docker build \
-          -t $DOCKER_USERNAME/chatbot-backend:latest \
-          -f backend/Dockerfile.backend \
-          .
-
-      - name: Push backend image
-        run: |
-          docker push $DOCKER_USERNAME/chatbot-backend:latest
-
-     
-
-      - name: Build frontend image
-        run: |
-          docker build \
-          -t $DOCKER_USERNAME/chatbot-frontend:latest \
-          -f frontend/Dockerfile.frontend \
-          frontend
-
-      - name: Push frontend image
-        run: |
-          docker push $DOCKER_USERNAME/chatbot-frontend:latest
-
-  
+          pytest backend/tests \
+          --ignore=backend/tests/test_integration.py

@@ -3,13 +3,15 @@ from datetime import datetime, timezone
 import uuid
 from backend.database import Base
 
+
 class Chat(Base):
     __tablename__ = "chats"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    user_id = Column(String, ForeignKey("users.id"))   # NEW
+    user_id = Column(String, ForeignKey("users.id"))  # NEW
     title = Column(String)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
 
 class Message(Base):
     __tablename__ = "messages"

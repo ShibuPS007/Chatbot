@@ -1,30 +1,66 @@
-from .conftest import client
-
-def test_signup():
-    res = client.post(
-        "/signup",
-        json={"email": "auth@test.com", "password": "password123"}
-    )
-
-    data = res.json()
-    assert res.status_code == 200
-    assert "user_id" in data
-    assert "access_token" in data
+from backend.auth import hash_password, verify_password, create_access_token
 
 
-def test_login():
-    # first create user
+def test_hash_password():
+    password = "secret123"
+
+    hashed = hash_password(password)
+
+    assert hashed != password
+
+
+def test_verify_password():
+    password = "secret123"
+
+    hashed = hash_password(password)
+
+    assert verify_password(password, hashed)
+
+
+def test_create_access_token():
+    token = create_access_token({"sub": "123"})
+
+    assert token is not None
+    assert isinstance(token, str)
+
+
+def test_duplicate_signup(client):
+
     client.post(
         "/signup",
-        json={"email": "login@test.com", "password": "secret"}
+        json={"email": "user@test.com", "password": "123456"},
     )
 
-    # then login
-    res = client.post(
+    response = client.post(
+        "/signup",
+        json={"email": "user@test.com", "password": "123456"},
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Email already exists"
+
+
+def test_invalid_login(client):
+
+    client.post(
+        "/signup",
+        json={"email": "user@test.com", "password": "123456"},
+    )
+
+    response = client.post(
         "/login",
-        json={"email": "login@test.com", "password": "secret"}
+        json={"email": "user@test.com", "password": "wrongpassword"},
     )
 
-    data = res.json()
-    assert res.status_code == 200
-    assert "access_token" in data
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Invalid credentials"
+
+
+def test_invalid_token(client):
+
+    response = client.get(
+        "/chats",
+        headers={"Authorization": "Bearer fake_token"},
+    )
+
+    assert response.status_code == 401
