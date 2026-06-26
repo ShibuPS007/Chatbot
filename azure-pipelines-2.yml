@@ -51,7 +51,10 @@ steps:
   inputs:
     targetType: inline
     script: |
-      echo "Pipeline YAML version: v2"   # change this each commit
+      echo "Pipeline YAML version: v2"
+      echo "Length of SECRET_KEY: ${#SECRET_KEY}"
+      echo "Value or fallback: ${SECRET_KEY:-EMPTY_OR_UNSET}"
+
       if [ -z "$SECRET_KEY" ]; then
         echo "SECRET_KEY is NOT SET"
         exit 1
