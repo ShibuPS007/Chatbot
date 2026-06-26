@@ -9,8 +9,10 @@ pool:
   vmImage: ubuntu-latest
 
 variables:
-- name: pythonVersion
-  value: "3.12"
+  - name: pythonVersion
+    value: "3.12"
+  - name: SECRET_KEY
+    value: "my-temporary-ci-secret-key"
 
 steps:
 - checkout: self
@@ -45,39 +47,23 @@ steps:
       black --check .
 
 - task: Bash@3
-  displayName: Debug SECRET_KEY
+  displayName: Check SECRET_KEY
   inputs:
     targetType: inline
     script: |
-      echo "SECRET_KEY=[$SECRET_KEY]"
-      env | grep SECRET || true
+      echo "Pipeline YAML version: v2"
+      echo "Length of SECRET_KEY: ${#SECRET_KEY}"
+      echo "Value or fallback: ${SECRET_KEY:-EMPTY_OR_UNSET}"
 
-      python - <<EOF
-      import os
-      print("Python SECRET_KEY:", repr(os.getenv("SECRET_KEY")))
-      EOF
+      if [ -z "$SECRET_KEY" ]; then
+        echo "SECRET_KEY is NOT SET"
+        exit 1
+      else
+        echo "SECRET_KEY is SET"
+      fi
   env:
-    SECRET_KEY: my-temporary-ci-secret-key
-- task: Bash@3
-  displayName: Debug Python Env
-  inputs:
-    targetType: inline
-    script: |
-      python - <<EOF
-      import os
-      print("SECRET_KEY =", repr(os.getenv("SECRET_KEY")))
-      EOF
-  env:
-    SECRET_KEY: my-temporary-ci-secret-key
+    SECRET_KEY: $(SECRET_KEY)
 
-- task: Bash@3
-  displayName: Test Import
-  inputs:
-    targetType: inline
-    script: |
-      PYTHONPATH=$(pwd) python -c "from backend.routers.auth_router import router"
-  env:
-    SECRET_KEY: my-temporary-ci-secret-key
 - task: Bash@3
   displayName: Run Tests
   inputs:
@@ -86,5 +72,5 @@ steps:
       pytest backend/tests \
         --ignore=backend/tests/test_integration.py
   env:
-    SECRET_KEY: my-temporary-ci-secret-key
-    PYTHONPATH: $(System.DefaultWorkingDirectory) 
+    SECRET_KEY: $(SECRET_KEY)
+    PYTHONPATH: $(System.DefaultWorkingDirectory)
