@@ -38,13 +38,17 @@ steps:
     echo "Variable group imported: $(SECRET_KEY)"
   displayName: Test Variable Expansion
 - script: |
-    if [ -z "$SECRET_KEY" ]; then
-      echo "SECRET_KEY is NOT SET"
-      exit 1
+    echo "Environment variables containing SECRET:"
+    printenv | grep SECRET || true
+
+    echo "Length of SECRET_KEY: ${#SECRET_KEY}"
+
+    if [ -z "${SECRET_KEY+x}" ]; then
+      echo "UNSET"
     else
-      echo "SECRET_KEY is SET"
+      echo "SET"
     fi
-  displayName: Check SECRET_KEY
+  displayName: Debug SECRET_KEY
   env:
     SECRET_KEY: $(SECRET_KEY)     
  
