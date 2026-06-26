@@ -1,0 +1,41 @@
+trigger:
+  branches:
+    include:
+      - feature/*
+
+pr: none
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  pythonVersion: "3.12"
+
+steps:
+- checkout: self
+
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: $(pythonVersion)
+
+- script: |
+    python -m pip install --upgrade pip
+    pip install -r backend/requirements.txt
+    pip install pytest pytest-mock
+    pip install ruff black
+  displayName: Install Dependencies
+
+- script: |
+    ruff check . --ignore F401
+  displayName: Ruff Check
+
+- script: |
+    black --check .
+  displayName: Black Check
+
+- script: |
+    pytest backend/tests \
+      --ignore=backend/tests/test_integration.py
+  displayName: Run Tests
+  env:
+    SECRET_KEY: $(SECRET_KEY)
