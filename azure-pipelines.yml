@@ -34,7 +34,9 @@ steps:
 - script: |
     black --check .
   displayName: Black Check
-
+- script: |
+    echo "Variable group imported: $(SECRET_KEY)"
+  displayName: Test Variable Expansion
 - script: |
     if [ -z "$SECRET_KEY" ]; then
       echo "SECRET_KEY is NOT SET"
