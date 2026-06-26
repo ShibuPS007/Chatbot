@@ -9,7 +9,9 @@ pool:
   vmImage: ubuntu-latest
 
 variables:
-  pythonVersion: "3.12"
+- group: ci variable
+- name: pythonVersion
+  value: "3.12"
 
 steps:
 - checkout: self
