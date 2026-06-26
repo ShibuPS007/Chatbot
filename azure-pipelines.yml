@@ -46,8 +46,8 @@ steps:
     fi
   displayName: Check SECRET_KEY
   env:
-    SECRET_KEY: $(SECRET_KEY)
-
+    SECRET_KEY: $(SECRET_KEY)     
+ 
 - script: |
     pytest backend/tests \
       --ignore=backend/tests/test_integration.py
