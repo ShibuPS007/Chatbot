@@ -58,7 +58,17 @@ steps:
       EOF
   env:
     SECRET_KEY: my-temporary-ci-secret-key
-
+- task: Bash@3
+  displayName: Debug Python Env
+  inputs:
+    targetType: inline
+    script: |
+      python - <<EOF
+      import os
+      print("SECRET_KEY =", repr(os.getenv("SECRET_KEY")))
+      EOF
+  env:
+    SECRET_KEY: my-temporary-ci-secret-key
 - task: Bash@3
   displayName: Run Tests
   inputs:
