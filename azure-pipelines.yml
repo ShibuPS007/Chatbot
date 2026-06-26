@@ -69,6 +69,15 @@ steps:
       EOF
   env:
     SECRET_KEY: my-temporary-ci-secret-key
+
+- task: Bash@3
+  displayName: Test Import
+  inputs:
+    targetType: inline
+    script: |
+      PYTHONPATH=$(pwd) python -c "from backend.routers.auth_router import router"
+  env:
+    SECRET_KEY: my-temporary-ci-secret-key
 - task: Bash@3
   displayName: Run Tests
   inputs:
@@ -78,3 +87,4 @@ steps:
         --ignore=backend/tests/test_integration.py
   env:
     SECRET_KEY: my-temporary-ci-secret-key
+    PYTHONPATH: $(System.DefaultWorkingDirectory) 
