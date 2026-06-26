@@ -51,7 +51,7 @@ steps:
   inputs:
     targetType: inline
     script: |
-      echo "Pipeline YAML version: v2"
+      echo "Pipeline YAML version: v3"
       echo "Length of SECRET_KEY: ${#SECRET_KEY}"
       echo "Value or fallback: ${SECRET_KEY:-EMPTY_OR_UNSET}"
 
