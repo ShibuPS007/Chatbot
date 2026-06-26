@@ -1,78 +1,54 @@
 trigger:
-- none
+  branches:
+    include:
+      - feature/*
+
+pr: none
 
 pool:
   vmImage: ubuntu-latest
 
 variables:
-  acrName: starkregistry123
-  resourceGroup: chatbot
-  backendApp: stark-backend
-  frontendApp: stark-frontend
-  azureServiceConnection: azure-connection
+- group: ci variable
+- name: pythonVersion
+  value: "3.12"
 
 steps:
+- checkout: self
 
-# Install Python & Run Tests
 - task: UsePythonVersion@0
   inputs:
-    versionSpec: '3.12'
+    versionSpec: $(pythonVersion)
 
 - script: |
     python -m pip install --upgrade pip
     pip install -r backend/requirements.txt
-    pip install pytest
-    pytest backend/tests
-  displayName: "Run Backend Tests"
+    pip install pytest pytest-mock
+    pip install ruff black
+  displayName: Install Dependencies
 
-# Generate Short SHA
 - script: |
-    SHORT_SHA=$(echo $(Build.SourceVersion) | cut -c1-7)
-    echo "##vso[task.setvariable variable=shortSha]$SHORT_SHA"
-  displayName: "Generate Short SHA"
+    ruff check . --ignore F401
+  displayName: Ruff Check
 
-# Build ,Push, Deploy Backend
-- task: AzureCLI@2
-  inputs:
-    azureSubscription: $(azureServiceConnection)
-    scriptType: bash
-    scriptLocation: inlineScript
-    inlineScript: |
-      IMAGE_TAG="$(Build.SourceBranchName)-$(Build.BuildId)-$(shortSha)"
-      echo "Using tag: $IMAGE_TAG"
+- script: |
+    black --check .
+  displayName: Black Check
 
-      az acr login --name $(acrName)
+- script: |
+    if [ -z "$SECRET_KEY" ]; then
+      echo "SECRET_KEY is NOT SET"
+      exit 1
+    else
+      echo "SECRET_KEY is SET"
+    fi
+  displayName: Check SECRET_KEY
+  env:
+    SECRET_KEY: $(SECRET_KEY)
 
-      docker build \
-        -t $(acrName).azurecr.io/backend:$IMAGE_TAG \
-        -f backend/Dockerfile.backend .
-
-      docker push $(acrName).azurecr.io/backend:$IMAGE_TAG
-
-      az containerapp update \
-        --name $(backendApp) \
-        --resource-group $(resourceGroup) \
-        --image $(acrName).azurecr.io/backend:$IMAGE_TAG
-
-# Build , Push, Deploy Frontend
-- task: AzureCLI@2
-  inputs:
-    azureSubscription: $(azureServiceConnection)
-    scriptType: bash
-    scriptLocation: inlineScript
-    inlineScript: |
-      IMAGE_TAG="$(Build.SourceBranchName)-$(Build.BuildId)-$(shortSha)"
-      echo "Using tag: $IMAGE_TAG"
-
-      az acr login --name $(acrName)
-
-      docker build \
-        -t $(acrName).azurecr.io/frontend:$IMAGE_TAG \
-        -f frontend/Dockerfile.frontend frontend
-
-      docker push $(acrName).azurecr.io/frontend:$IMAGE_TAG
-
-      az containerapp update \
-        --name $(frontendApp) \
-        --resource-group $(resourceGroup) \
-        --image $(acrName).azurecr.io/frontend:$IMAGE_TAG
+- script: |
+    pytest backend/tests \
+      --ignore=backend/tests/test_integration.py
+  displayName: Run Tests
+  env:
+    SECRET_KEY: $(SECRET_KEY)
