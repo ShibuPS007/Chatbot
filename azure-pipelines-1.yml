@@ -39,5 +39,13 @@ steps:
     pytest backend/tests \
       --ignore=backend/tests/test_integration.py
   displayName: Run Tests
+- script: |
+    if [ -z "$SECRET_KEY" ]; then
+      echo "SECRET_KEY is NOT SET"
+      exit 1
+    else
+      echo "SECRET_KEY is SET"
+    fi
+  displayName: Check SECRET_KEY
   env:
     SECRET_KEY: $(SECRET_KEY)
