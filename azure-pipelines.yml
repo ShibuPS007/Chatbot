@@ -50,11 +50,11 @@ steps:
     fi
   displayName: Debug SECRET_KEY
   env:
-    SECRET_KEY: $(SECRET_KEY)     
+    SECRET_KEY: "my-temporary-ci-secret-key"     
  
 - script: |
     pytest backend/tests \
       --ignore=backend/tests/test_integration.py
   displayName: Run Tests
   env:
-    SECRET_KEY: $(SECRET_KEY)
+    SECRET_KEY: "my-temporary-ci-secret-key"
