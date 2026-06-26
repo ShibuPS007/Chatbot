@@ -9,7 +9,6 @@ pool:
   vmImage: ubuntu-latest
 
 variables:
-- group: ci variable
 - name: pythonVersion
   value: "3.12"
 
@@ -17,38 +16,65 @@ steps:
 - checkout: self
 
 - task: UsePythonVersion@0
+  displayName: Use Python
   inputs:
     versionSpec: $(pythonVersion)
 
-- script: |
-    python -m pip install --upgrade pip
-    pip install -r backend/requirements.txt
-    pip install pytest pytest-mock
-    pip install ruff black
+- task: Bash@3
   displayName: Install Dependencies
+  inputs:
+    targetType: inline
+    script: |
+      python -m pip install --upgrade pip
+      pip install -r backend/requirements.txt
+      pip install pytest pytest-mock
+      pip install ruff black
 
-- script: |
-    ruff check . --ignore F401
+- task: Bash@3
   displayName: Ruff Check
+  inputs:
+    targetType: inline
+    script: |
+      ruff check . --ignore F401
 
-- script: |
-    black --check .
+- task: Bash@3
   displayName: Black Check
+  inputs:
+    targetType: inline
+    script: |
+      black --check .
 
-- script: |
-    if [ -z "$SECRET_KEY" ]; then
-      echo "SECRET_KEY is NOT SET"
-      exit 1
-    else
-      echo "SECRET_KEY is SET"
-    fi
-  displayName: Check SECRET_KEY
+- task: Bash@3
+  displayName: Debug SECRET_KEY
+  inputs:
+    targetType: inline
+    script: |
+      echo "SECRET_KEY=[$SECRET_KEY]"
+      env | grep SECRET || true
+
+      python - <<EOF
+      import os
+      print("Python SECRET_KEY:", repr(os.getenv("SECRET_KEY")))
+      EOF
   env:
-    SECRET_KEY: $(SECRET_KEY)
-
-- script: |
-    pytest backend/tests \
-      --ignore=backend/tests/test_integration.py
+    SECRET_KEY: my-temporary-ci-secret-key
+- task: Bash@3
+  displayName: Debug Python Env
+  inputs:
+    targetType: inline
+    script: |
+      python - <<EOF
+      import os
+      print("SECRET_KEY =", repr(os.getenv("SECRET_KEY")))
+      EOF
+  env:
+    SECRET_KEY: my-temporary-ci-secret-key
+- task: Bash@3
   displayName: Run Tests
+  inputs:
+    targetType: inline
+    script: |
+      pytest backend/tests \
+        --ignore=backend/tests/test_integration.py
   env:
-    SECRET_KEY: $(SECRET_KEY)
+    SECRET_KEY: my-temporary-ci-secret-key
