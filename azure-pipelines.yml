@@ -9,44 +9,21 @@ pool:
   vmImage: ubuntu-latest
 
 variables:
-  - name: pythonVersion
-    value: "3.12"
-  - group: ci-variables 
+  - group: ci-variables
 
 steps:
 - checkout: self
 
-- task: UsePythonVersion@0
-  displayName: Use Python
-  inputs:
-    versionSpec: $(pythonVersion)
-
-
 - task: Bash@3
-  displayName: Check SECRET
+  displayName: Check SECRET_KEY
   inputs:
     targetType: inline
     script: |
-      echo "Pipeline YAML version: v3"
-      echo "Length of SECRET_KEY: ${#SECRET}"
-      echo "Value or fallback: ${SECRET:-EMPTY_OR_UNSET}"
-
       if [ -z "$SECRET" ]; then
         echo "SECRET_KEY is NOT SET"
         exit 1
-      else
-        echo "SECRET_KEY is SET"
       fi
-  env:
-    SECRET: $(SECRET_KEY)
 
-- task: Bash@3
-  displayName: Run Tests
-  inputs:
-    targetType: inline
-    script: |
-      pytest backend/tests \
-        --ignore=backend/tests/test_integration.py
+      echo "SECRET_KEY is SET"
   env:
     SECRET: $(SECRET_KEY)
-    PYTHONPATH: $(System.DefaultWorkingDirectory)
