@@ -9,7 +9,7 @@ pool:
   vmImage: ubuntu-latest
 
 variables:
-  SECRET_KEY: "my-temporary-ci-secret-key"
+  MY_SECRET: "my-temporary-ci-secret-key"
 
 steps:
 - checkout: self
@@ -24,14 +24,14 @@ steps:
 - task: Bash@3
   displayName: Test Env
   env:
-    SECRET_KEY: $(SECRET_KEY)
+    MY_SECRET: $(MY_SECRET)
     MY_TEST: hello
   inputs:
     targetType: inline
     script: |
-      echo "SECRET_KEY=[$SECRET_KEY]"
+      echo "MY_SECRET=[$MY_SECRET]"
       echo "MY_TEST=[$MY_TEST]"
-      env | sort | grep -E 'SECRET|MY_TEST'
+      env | sort | grep -E 'MY_SECRET|MY_TEST'
 # Check environment variable injection
 - task: Bash@3
   displayName: Check Environment Variable
