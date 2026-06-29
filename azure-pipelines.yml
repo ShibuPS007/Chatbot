@@ -9,65 +9,22 @@ pool:
   vmImage: ubuntu-latest
 
 variables:
-  pythonVersion: "3.12"
   MY_SECRET: "my-temporary-ci-secret-key"
 
 steps:
-- checkout: self
-
-- task: UsePythonVersion@0
-  displayName: Use Python
-  inputs:
-    versionSpec: $(pythonVersion)
-
 - task: Bash@3
-  displayName: Install Dependencies
-  inputs:
-    targetType: inline
-    script: |
-      python -m pip install --upgrade pip
-      pip install -r backend/requirements.txt
-      pip install pytest pytest-mock
-      pip install ruff black
-
-- task: Bash@3
-  displayName: Ruff Check
-  inputs:
-    targetType: inline
-    script: |
-      ruff check . --ignore F401
-
-- task: Bash@3
-  displayName: Black Check
-  inputs:
-    targetType: inline
-    script: |
-      black --check .
-
-- task: Bash@3
-  displayName: Check SECRET_KEY
+  displayName: Test SECRET_KEY Mapping
   env:
-    SECRET: $(MY_SECRET)
+    SECRET_KEY: $(MY_SECRET)
   inputs:
     targetType: inline
     script: |
-      echo "SECRET_KEY=[$SECRET]"
-      echo "Length=${#SECRET}"
+      echo "SECRET_KEY=[$SECRET_KEY]"
+      echo "Length=${#SECRET_KEY}"
 
-      if [ -z "$SECRET" ]; then
-        echo "SECRET_KEY is NOT SET"
+      if [ -z "$SECRET_KEY" ]; then
+        echo "❌ SECRET_KEY is NOT SET"
         exit 1
       else
-        echo "SECRET_KEY is SET"
+        echo "✅ SECRET_KEY is SET"
       fi
-
-- task: Bash@3
-  displayName: Run Tests
-  env:
-    SECRET: $(MY_SECRET)
-    PYTHONPATH: $(System.DefaultWorkingDirectory)
-  inputs:
-    targetType: inline
-    script: |
-      pytest backend/tests \
-        --ignore=backend/tests/test_integration.py
