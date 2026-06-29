@@ -11,7 +11,7 @@ pool:
 variables:
   - name: pythonVersion
     value: "3.12"
-  - name: SECRET_KEY
+  - name: SECRET
     value: "my-temporary-ci-secret-key"
 
 steps:
@@ -47,22 +47,22 @@ steps:
       black --check .
 
 - task: Bash@3
-  displayName: Check SECRET_KEY
+  displayName: Check SECRET
   inputs:
     targetType: inline
     script: |
       echo "Pipeline YAML version: v3"
-      echo "Length of SECRET_KEY: ${#SECRET_KEY}"
-      echo "Value or fallback: ${SECRET_KEY:-EMPTY_OR_UNSET}"
+      echo "Length of SECRET_KEY: ${#SECRET}"
+      echo "Value or fallback: ${SECRET:-EMPTY_OR_UNSET}"
 
-      if [ -z "$SECRET_KEY" ]; then
+      if [ -z "$SECRET" ]; then
         echo "SECRET_KEY is NOT SET"
         exit 1
       else
         echo "SECRET_KEY is SET"
       fi
   env:
-    SECRET_KEY: $(SECRET_KEY)
+    SECRET: $(SECRET)
 
 - task: Bash@3
   displayName: Run Tests
@@ -72,5 +72,5 @@ steps:
       pytest backend/tests \
         --ignore=backend/tests/test_integration.py
   env:
-    SECRET_KEY: $(SECRET_KEY)
+    SECRET: $(SECRET)
     PYTHONPATH: $(System.DefaultWorkingDirectory)
