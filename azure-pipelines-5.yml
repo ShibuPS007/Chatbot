@@ -1,0 +1,45 @@
+trigger:
+  branches:
+    include:
+      - feature/*
+
+pr: none
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  SECRET_KEY: "my-temporary-ci-secret-key"
+
+steps:
+- checkout: self
+
+# Check pipeline variable expansion
+- task: Bash@3
+  displayName: Check Pipeline Variable
+  inputs:
+    targetType: inline
+    script: |
+      echo "Pipeline variable: [$(SECRET_KEY)]"
+
+# Check environment variable injection
+- task: Bash@3
+  displayName: Check Environment Variable
+  env:
+    SECRET_KEY: $(SECRET_KEY)
+  inputs:
+    targetType: inline
+    script: |
+      echo "===== Environment ====="
+      env | sort | grep SECRET || true
+
+      echo ""
+      echo "SECRET_KEY=[$SECRET_KEY]"
+      echo "Length=${#SECRET_KEY}"
+
+      if [ -z "$SECRET_KEY" ]; then
+        echo " SECRET_KEY is NOT SET"
+        exit 1
+      else
+        echo " SECRET_KEY is SET"
+      fi
