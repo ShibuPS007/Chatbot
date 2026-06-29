@@ -45,7 +45,12 @@ steps:
     targetType: inline
     script: |
       black --check .
-
+- task: Bash@3
+  displayName: Check Pipeline Variable
+  inputs:
+    targetType: inline
+    script: |
+      echo "Pipeline variable is: [$(SECRET_KEY)]"
 - task: Bash@3
   displayName: Check SECRET_KEY
   inputs:
