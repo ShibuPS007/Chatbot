@@ -51,6 +51,19 @@ steps:
     targetType: inline
     script: |
       echo "Pipeline variable is: [$(SECRET_KEY)]"
+
+- task: Bash@3
+  displayName: Check SECRET_KEY
+  env:
+    SECRET_KEY: $(SECRET_KEY)
+  inputs:
+    targetType: inline
+    script: |
+      echo "Environment:"
+      env | sort | grep SECRET
+
+      echo "SECRET_KEY=[$SECRET_KEY]"
+      echo "Length=${#SECRET_KEY}"
 - task: Bash@3
   displayName: Check SECRET_KEY
   inputs:
