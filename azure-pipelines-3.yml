@@ -1,0 +1,32 @@
+variables:
+
+- group: 'ci variable'
+ 
+stages:
+
+- stage: Test
+
+  jobs:
+
+  - job: RunTests
+
+    steps:
+
+    - task: Bash@3
+
+      displayName: 'Test Import'
+
+      inputs:
+
+        targetType: 'inline'
+
+        script: |
+
+          PYTHONPATH=$(pwd) python -c "from backend.routers.auth_router import router"
+
+      # 2. You must explicitly map the secret into the running environment
+
+      env:
+
+        SECRET_KEY: $(SECRET_KEY)
+ 
