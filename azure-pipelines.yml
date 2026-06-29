@@ -47,14 +47,14 @@ steps:
 - task: Bash@3
   displayName: Check SECRET_KEY
   env:
-    SECRET_KEY: $(MY_SECRET)
+    SECRET: $(MY_SECRET)
   inputs:
     targetType: inline
     script: |
-      echo "SECRET_KEY=[$SECRET_KEY]"
-      echo "Length=${#SECRET_KEY}"
+      echo "SECRET_KEY=[$SECRET]"
+      echo "Length=${#SECRET}"
 
-      if [ -z "$SECRET_KEY" ]; then
+      if [ -z "$SECRET" ]; then
         echo "SECRET_KEY is NOT SET"
         exit 1
       else
@@ -64,7 +64,7 @@ steps:
 - task: Bash@3
   displayName: Run Tests
   env:
-    SECRET_KEY: $(MY_SECRET)
+    SECRET: $(MY_SECRET)
     PYTHONPATH: $(System.DefaultWorkingDirectory)
   inputs:
     targetType: inline
