@@ -26,4 +26,4 @@ steps:
 
       echo "SECRET_KEY is SET"
   env:
-    SECRET: $(SECRET_KEY)
+    SECRET_KEY: $(SECRET_KEY)
