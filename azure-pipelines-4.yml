@@ -1,0 +1,35 @@
+variables:
+- group: 'ci variable'
+ 
+stages:
+- stage: Test
+  jobs:
+  - job: RunTests
+    steps:
+    # 1. Ensure Python is installed on the agent
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '3.12'
+        addToPath: true
+ 
+    # 2. Install FastAPI and any other dependencies
+    - task: Bash@3
+      displayName: 'Install Dependencies'
+      inputs:
+        targetType: 'inline'
+        script: |
+          python -m pip install --upgrade pip
+          # If you have a requirements file:
+          pip install -r backend/requirements.txt 
+          # Or install them manually if you don't have a requirements.txt file:
+          # pip install fastapi pydantic
+ 
+    # 3. Run your test import step
+    - task: Bash@3
+      displayName: 'Test Import'
+      inputs:
+        targetType: 'inline'
+        script: |
+          PYTHONPATH=$(pwd) python -c "from backend.routers.auth_router import router"
+      env:
+        SECRET_KEY: $(SECRET_KEY)
