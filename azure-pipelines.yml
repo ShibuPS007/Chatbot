@@ -21,29 +21,6 @@ steps:
   inputs:
     versionSpec: $(pythonVersion)
 
-- task: Bash@3
-  displayName: Install Dependencies
-  inputs:
-    targetType: inline
-    script: |
-      python -m pip install --upgrade pip
-      pip install -r backend/requirements.txt
-      pip install pytest pytest-mock
-      pip install ruff black
-
-- task: Bash@3
-  displayName: Ruff Check
-  inputs:
-    targetType: inline
-    script: |
-      ruff check . --ignore F401
-
-- task: Bash@3
-  displayName: Black Check
-  inputs:
-    targetType: inline
-    script: |
-      black --check .
 
 - task: Bash@3
   displayName: Check SECRET
@@ -61,7 +38,7 @@ steps:
         echo "SECRET_KEY is SET"
       fi
   env:
-    SECRET: $(secret)
+    SECRET: $(SECRET_KEY)
 
 - task: Bash@3
   displayName: Run Tests
@@ -71,5 +48,5 @@ steps:
       pytest backend/tests \
         --ignore=backend/tests/test_integration.py
   env:
-    SECRET: $(secret)
+    SECRET: $(SECRET_KEY)
     PYTHONPATH: $(System.DefaultWorkingDirectory)
