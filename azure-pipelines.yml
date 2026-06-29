@@ -9,10 +9,8 @@ pool:
   vmImage: ubuntu-latest
 
 variables:
-  - name: pythonVersion
-    value: "3.12"
-  - name: SECRET_KEY
-    value: "my-temporary-ci-secret-key"
+  pythonVersion: "3.12"
+  MY_SECRET: "my-temporary-ci-secret-key"
 
 steps:
 - checkout: self
@@ -45,33 +43,16 @@ steps:
     targetType: inline
     script: |
       black --check .
-- task: Bash@3
-  displayName: Check Pipeline Variable
-  inputs:
-    targetType: inline
-    script: |
-      echo "Pipeline variable is: [$(SECRET_KEY)]"
 
 - task: Bash@3
   displayName: Check SECRET_KEY
   env:
-    SECRET_KEY: $(SECRET_KEY)
+    SECRET_KEY: $(MY_SECRET)
   inputs:
     targetType: inline
     script: |
-      echo "Environment:"
-      env | sort | grep SECRET
-
       echo "SECRET_KEY=[$SECRET_KEY]"
       echo "Length=${#SECRET_KEY}"
-- task: Bash@3
-  displayName: Check SECRET_KEY
-  inputs:
-    targetType: inline
-    script: |
-      echo "Pipeline YAML version: v3"
-      echo "Length of SECRET_KEY: ${#SECRET_KEY}"
-      echo "Value or fallback: ${SECRET_KEY:-EMPTY_OR_UNSET}"
 
       if [ -z "$SECRET_KEY" ]; then
         echo "SECRET_KEY is NOT SET"
@@ -79,16 +60,14 @@ steps:
       else
         echo "SECRET_KEY is SET"
       fi
-  env:
-    SECRET_KEY: $(SECRET_KEY)
 
 - task: Bash@3
   displayName: Run Tests
+  env:
+    SECRET_KEY: $(MY_SECRET)
+    PYTHONPATH: $(System.DefaultWorkingDirectory)
   inputs:
     targetType: inline
     script: |
       pytest backend/tests \
         --ignore=backend/tests/test_integration.py
-  env:
-    SECRET_KEY: $(SECRET_KEY)
-    PYTHONPATH: $(System.DefaultWorkingDirectory)
